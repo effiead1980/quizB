@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Επαναληπτικό Τεστ Β — Α΄ Λυκείου</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0e0e12;
+    --surface: #16161e;
+    --card: #1e1e2a;
+    --border: #2e2e3e;
+    --accent: #e06060;
+    --accent2: #5b8fff;
+    --correct: #3ecf7a;
+    --wrong: #ff5a5a;
+    --text: #e8e8f0;
+    --muted: #b0b0cc;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; padding: 0 0 60px; }
+
+  header { background: var(--surface); border-bottom: 2px solid var(--accent); padding: 28px 40px 20px; display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap; }
+  .header-title { flex: 1; }
+  .header-title h1 { font-size: 1.7rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; }
+  .header-title h1 span { color: var(--accent); }
+  .header-title p { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); margin-top: 6px; letter-spacing: 0.05em; }
+  .progress-wrap { text-align: right; }
+  .progress-label { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); margin-bottom: 6px; }
+  .progress-bar { width: 200px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.4s ease; }
+
+  main { max-width: 780px; margin: 0 auto; padding: 40px 24px 0; }
+
+  .section-badge { display: inline-block; font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; background: var(--accent); color: #fff; padding: 3px 10px; border-radius: 2px; margin-bottom: 18px; font-weight: 700; }
+  .section-badge.html { background: var(--accent2); color: #fff; }
+
+  .q-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 28px 28px 22px; margin-bottom: 22px; transition: border-color 0.2s; }
+  .q-card.answered-correct { border-color: var(--correct); }
+  .q-card.answered-wrong { border-color: var(--wrong); }
+  .q-num { font-family: var(--mono); font-size: 0.65rem; color: var(--muted); margin-bottom: 10px; letter-spacing: 0.08em; }
+  .q-text { font-size: 1.0rem; font-weight: 700; line-height: 1.5; margin-bottom: 16px; }
+
+  .code-block { background: #0a0a10; border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 6px; padding: 14px 18px; font-family: var(--mono); font-size: 0.8rem; line-height: 1.7; margin-bottom: 18px; white-space: pre; overflow-x: auto; color: #c8d8ff; }
+  .code-block .kw { color: #e06060; }
+  .code-block .fn { color: #80dfff; }
+  .code-block .str { color: #a0e8a0; }
+  .code-block .num { color: #ffaa60; }
+  .code-block .cm { color: #9090bb; }
+
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .opt-btn { background: var(--surface); border: 1.5px solid var(--border); border-radius: 7px; color: var(--text); font-family: var(--sans); font-size: 0.9rem; font-weight: 400; padding: 12px 16px; text-align: left; cursor: pointer; transition: border-color 0.15s, background 0.15s, transform 0.1s; display: flex; align-items: center; gap: 12px; }
+  .opt-btn:hover:not(:disabled) { border-color: var(--accent); background: #1a1a24; transform: translateX(3px); }
+  .opt-btn .opt-letter { font-family: var(--mono); font-size: 0.7rem; background: var(--border); color: #d0d0ee; border-radius: 4px; padding: 2px 7px; flex-shrink: 0; font-weight: 700; }
+  .opt-btn.correct { background: #0e2a1a; border-color: var(--correct); color: var(--correct); }
+  .opt-btn.correct .opt-letter { background: var(--correct); color: #000; }
+  .opt-btn.wrong { background: #2a0e0e; border-color: var(--wrong); color: var(--wrong); }
+  .opt-btn.wrong .opt-letter { background: var(--wrong); color: #fff; }
+  .opt-btn:disabled { cursor: default; }
+
+  .feedback { margin-top: 12px; font-family: var(--mono); font-size: 0.78rem; line-height: 1.5; padding: 10px 14px; border-radius: 6px; display: none; }
+  .feedback.show { display: block; }
+  .feedback.correct { background: #0e2a1a; color: var(--correct); border: 1px solid #1a4a2a; }
+  .feedback.wrong { background: #2a0e0e; color: #ff9a9a; border: 1px solid #4a1a1a; }
+
+  .fill-wrap { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .fill-input { background: var(--surface); border: 1.5px solid var(--border); border-radius: 7px; color: var(--text); font-family: var(--mono); font-size: 0.9rem; padding: 10px 14px; width: 220px; outline: none; transition: border-color 0.15s; }
+  .fill-input:focus { border-color: var(--accent); }
+  .fill-input.correct { border-color: var(--correct); color: var(--correct); }
+  .fill-input.wrong { border-color: var(--wrong); color: var(--wrong); }
+  .check-btn { background: var(--accent); border: none; border-radius: 7px; color: #fff; font-family: var(--sans); font-size: 0.85rem; font-weight: 700; padding: 10px 20px; cursor: pointer; transition: opacity 0.15s, transform 0.1s; }
+  .check-btn:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
+  .check-btn:disabled { opacity: 0.4; cursor: default; }
+
+  #score-panel { display: none; background: var(--card); border: 2px solid var(--accent); border-radius: 14px; padding: 40px 36px; text-align: center; margin-top: 40px; }
+  #score-panel h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 8px; }
+  .score-big { font-family: var(--mono); font-size: 3.5rem; font-weight: 700; color: var(--accent); line-height: 1; margin: 16px 0 8px; }
+  .score-sub { font-family: var(--mono); font-size: 0.8rem; color: var(--muted); margin-bottom: 24px; }
+  .grade-badge { display: inline-block; font-size: 1.1rem; font-weight: 800; padding: 8px 24px; border-radius: 6px; margin-bottom: 28px; }
+  .grade-A { background: var(--correct); color: #000; }
+  .grade-B { background: #7ad4ff; color: #000; }
+  .grade-C { background: var(--accent); color: #fff; }
+  .grade-D { background: var(--wrong); color: #fff; }
+  .restart-btn { background: transparent; border: 2px solid var(--accent); border-radius: 8px; color: var(--accent); font-family: var(--sans); font-size: 0.95rem; font-weight: 700; padding: 12px 32px; cursor: pointer; letter-spacing: 0.04em; transition: background 0.15s, color 0.15s; }
+  .restart-btn:hover { background: var(--accent); color: #fff; }
+
+  .submit-wrap { text-align: center; margin-top: 36px; }
+  .submit-btn { background: var(--accent); border: none; border-radius: 9px; color: #fff; font-family: var(--sans); font-size: 1.05rem; font-weight: 800; padding: 16px 48px; cursor: pointer; letter-spacing: 0.02em; transition: opacity 0.15s, transform 0.15s; box-shadow: 0 4px 24px rgba(224,96,96,0.25); }
+  .submit-btn:hover { opacity: 0.88; transform: translateY(-2px); }
+
+  .section-divider { border: none; border-top: 1px solid var(--border); margin: 36px 0 28px; }
+
+  /* NAME CARD */
+  .name-card {
+    background: var(--card);
+    border: 2px solid var(--accent);
+    border-radius: 10px;
+    padding: 20px 28px;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .name-card label {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  .name-card input {
+    flex: 1;
+    min-width: 200px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 10px 16px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .name-card input:focus { border-color: var(--accent); }
+  .name-card input::placeholder { color: var(--muted); font-weight: 400; }
+
+  /* PRINT */
+  #print-area { display: none; }
+  @media print {
+    body * { visibility: hidden; }
+    #print-area, #print-area * { visibility: visible; }
+    #print-area {
+      display: block !important;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      padding: 32px;
+      font-family: Arial, sans-serif;
+      color: #111;
+      background: #fff;
+    }
+    #print-area h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    #print-area .pr-meta { font-size: 0.85rem; color: #333; margin-bottom: 20px; line-height: 1.8; }
+    #print-area .pr-meta strong { color: #000; }
+    #print-area .pr-score { border: 2px solid #111; border-radius: 8px; padding: 14px 22px; display: inline-block; margin-bottom: 24px; text-align: center; }
+    #print-area .pr-big { font-size: 2.4rem; font-weight: 700; }
+    #print-area .pr-grade { font-size: 1.1rem; font-weight: 700; margin-top: 4px; }
+    #print-area table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    #print-area th { background: #111; color: #fff; padding: 8px 12px; text-align:left; }
+    #print-area td { padding: 7px 12px; border-bottom: 1px solid #ddd; }
+    #print-area td:last-child { text-align: center; font-weight: 700; font-size: 1.1rem; }
+    #print-area .ok { color: #1a8a4a; }
+    #print-area .err { color: #cc3333; }
+    #print-area .pr-footer { margin-top: 28px; font-size: 0.75rem; color: #999; border-top: 1px solid #ddd; padding-top: 12px; }
+  }
+
+  @media (max-width: 600px) {
+    header { padding: 20px; }
+    .progress-bar { width: 140px; }
+    main { padding: 24px 14px 0; }
+    .q-card { padding: 20px 16px; }
+  }
+</style>
+<body>
+
+<header>
+  <div class="header-title">
+    <h1>Τεστ <span>Έκδοση Β</span></h1>
+    <p>Α΄ ΛΥΚΕΙΟΥ — ΠΛΗΡΟΦΟΡΙΚΗ // Python &amp; HTML</p>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-label">ΠΡΟΟΔΟΣ: <span id="prog-text">0 / 15</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+</header>
+
+<main>
+
+<!-- NAME -->
+<div class="name-card">
+  <label>👤 ΟΝΟΜΑ ΜΑΘΗΤΗ:</label>
+  <input type="text" id="student-name" placeholder="Γράψε το όνομά σου εδώ..." autocomplete="off" spellcheck="false"/>
+</div>
+
+<div class="section-badge">🐍 Python</div>
+
+<!-- Q1 -->
+<div class="q-card" id="qcard-1">
+  <div class="q-num">ΕΡΩΤΗΣΗ 01 — Πολλαπλής Επιλογής</div>
+  <div class="q-text">Ποια εντολή χρησιμοποιείται για να εμφανίσεις κείμενο στην οθόνη στην Python;</div>
+  <div class="options" id="opts-1">
+    <button class="opt-btn" onclick="answer(1,'A',false)"><span class="opt-letter">A</span> <code>display("κείμενο")</code></button>
+    <button class="opt-btn" onclick="answer(1,'B',false)"><span class="opt-letter">B</span> <code>echo("κείμενο")</code></button>
+    <button class="opt-btn" onclick="answer(1,'C',true)"><span class="opt-letter">C</span> <code>print("κείμενο")</code></button>
+    <button class="opt-btn" onclick="answer(1,'D',false)"><span class="opt-letter">D</span> <code>write("κείμενο")</code></button>
+  </div>
+  <div class="feedback" id="fb-1"></div>
+</div>
+
+<!-- Q2 -->
+<div class="q-card" id="qcard-2">
+  <div class="q-num">ΕΡΩΤΗΣΗ 02 — Πολλαπλής Επιλογής</div>
+  <div class="q-text">Τι αποθηκεύεται στη μεταβλητή <code style="color:var(--accent)">result</code>;</div>
+  <div class="code-block"><span class="fn">result</span> = <span class="fn">float</span>(<span class="fn">input</span>(<span class="str">"Δώσε βαθμό:"</span>))</div>
+  <div class="options" id="opts-2">
+    <button class="opt-btn" onclick="answer(2,'A',false)"><span class="opt-letter">A</span> Ακέραιος αριθμός (int)</button>
+    <button class="opt-btn" onclick="answer(2,'B',true)"><span class="opt-letter">B</span> Αριθμός κινητής υποδιαστολής (float)</button>
+    <button class="opt-btn" onclick="answer(2,'C',false)"><span class="opt-letter">C</span> Συμβολοσειρά (string)</button>
+    <button class="opt-btn" onclick="answer(2,'D',false)"><span class="opt-letter">D</span> Τίποτα — υπάρχει σφάλμα</button>
+  </div>
+  <div class="feedback" id="fb-2"></div>
+</div>
+
+<!-- Q3 -->
+<div class="q-card" id="qcard-3">
+  <div class="q-num">ΕΡΩΤΗΣΗ 03 — Τι Εκτυπώνεται;</div>
+  <div class="q-text">Αν ο χρήστης δώσει βαθμό <code style="color:var(--accent)">17</code>, τι θα εκτυπωθεί;</div>
+  <div class="code-block"><span class="fn">grade</span> = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"Βαθμός:"</span>))
+<span class="kw">if</span> grade &lt; <span class="num">0</span> <span class="kw">or</span> grade &gt; <span class="num">20</span>:
+    <span class="fn">print</span>(<span class="str">"Μη έγκυρος"</span>)
+<span class="kw">elif</span> grade &gt;= <span class="num">18</span>:
+    <span class="fn">print</span>(<span class="str">"Άριστα!"</span>)
+<span class="kw">elif</span> grade &gt;= <span class="num">15</span>:
+    <span class="fn">print</span>(<span class="str">"Καλά."</span>)
+<span class="kw">else</span>:
+    <span class="fn">print</span>(<span class="str">"Προσπάθησε περισσότερο"</span>)</div>
+  <div class="options" id="opts-3">
+    <button class="opt-btn" onclick="answer(3,'A',false)"><span class="opt-letter">A</span> Άριστα!</button>
+    <button class="opt-btn" onclick="answer(3,'B',true)"><span class="opt-letter">B</span> Καλά.</button>
+    <button class="opt-btn" onclick="answer(3,'C',false)"><span class="opt-letter">C</span> Προσπάθησε περισσότερο</button>
+    <button class="opt-btn" onclick="answer(3,'D',false)"><span class="opt-letter">D</span> Μη έγκυρος</button>
+  </div>
+  <div class="feedback" id="fb-3"></div>
+</div>
+
+<!-- Q4 -->
+<div class="q-card" id="qcard-4">
+  <div class="q-num">ΕΡΩΤΗΣΗ 04 — Πολλαπλής Επιλογής</div>
+  <div class="q-text">Ποια από τις παρακάτω συνθήκες ελέγχει αν ο αριθμός <code style="color:var(--accent)">x</code> είναι <strong>μεταξύ 0 και 100</strong> (συμπεριλαμβανομένων);</div>
+  <div class="options" id="opts-4">
+    <button class="opt-btn" onclick="answer(4,'A',false)"><span class="opt-letter">A</span> <code>if x &gt; 0 and x &lt; 100</code></button>
+    <button class="opt-btn" onclick="answer(4,'B',false)"><span class="opt-letter">B</span> <code>if 0 &lt; x &lt; 100</code></button>
+    <button class="opt-btn" onclick="answer(4,'C',true)"><span class="opt-letter">C</span> <code>if x &gt;= 0 and x &lt;= 100</code></button>
+    <button class="opt-btn" onclick="answer(4,'D',false)"><span class="opt-letter">D</span> <code>if x = 0 or x = 100</code></button>
+  </div>
+  <div class="feedback" id="fb-4"></div>
+</div>
+
+<!-- Q5 -->
+<div class="q-card" id="qcard-5">
+  <div class="q-num">ΕΡΩΤΗΣΗ 05 — Συμπλήρωση Κενού</div>
+  <div class="q-text">Συμπλήρωσε τη λέξη που λείπει για να τυπωθεί σωστά το αποτέλεσμα του τριάθλου:</div>
+  <div class="code-block">TriathlonPoints = ______(0.6*(S+C+R)/3)</div>
+  <div class="fill-wrap">
+    <input class="fill-input" id="fill-5" placeholder="γράψε εδώ..." autocomplete="off" spellcheck="false"/>
+    <button class="check-btn" onclick="checkFill(5,'float')">Έλεγχος</button>
+  </div>
+  <div class="feedback" id="fb-5"></div>
+</div>
+
+<!-- Q6 -->
+<div class="q-card" id="qcard-6">
+  <div class="q-num">ΕΡΩΤΗΣΗ 06 — Εύρεση Λάθους</div>
+  <div class="q-text">Ποιο είναι το λάθος στον παρακάτω κώδικα;</div>
+  <div class="code-block"><span class="fn">age</span> = <span class="fn">input</span>(<span class="str">"Ηλικία:"</span>)
+<span class="kw">if</span> age &gt;= <span class="num">18</span>:
+    <span class="fn">print</span>(<span class="str">"Ενήλικας"</span>)</div>
+  <div class="options" id="opts-6">
+    <button class="opt-btn" onclick="answer(6,'A',true)"><span class="opt-letter">A</span> Η <code>input()</code> επιστρέφει string — δεν μπορεί να συγκριθεί με αριθμό χωρίς <code>int()</code></button>
+    <button class="opt-btn" onclick="answer(6,'B',false)"><span class="opt-letter">B</span> Λείπει το <code>else</code></button>
+    <button class="opt-btn" onclick="answer(6,'C',false)"><span class="opt-letter">C</span> Το <code>&gt;=</code> πρέπει να γίνει <code>&gt;</code></button>
+    <button class="opt-btn" onclick="answer(6,'D',false)"><span class="opt-letter">D</span> Δεν υπάρχει λάθος</button>
+  </div>
+  <div class="feedback" id="fb-6"></div>
+</div>
+
+<!-- Q7 -->
+<div class="q-card" id="qcard-7">
+  <div class="q-num">ΕΡΩΤΗΣΗ 07 — Πολλαπλής Επιλογής</div>
+  <div class="q-text">Τι κάνει η συνάρτηση <code style="color:var(--accent)">str()</code> στην Python;</div>
+  <div class="options" id="opts-7">
+    <button class="opt-btn" onclick="answer(7,'A',false)"><span class="opt-letter">A</span> Μετατρέπει αριθμό σε float</button>
+    <button class="opt-btn" onclick="answer(7,'B',false)"><span class="opt-letter">B</span> Διαβάζει είσοδο από τον χρήστη</button>
+    <button class="opt-btn" onclick="answer(7,'C',true)"><span class="opt-letter">C</span> Μετατρέπει μια τιμή σε συμβολοσειρά (string)</button>
+    <button class="opt-btn" onclick="answer(7,'D',false)"><span class="opt-letter">D</span> Εκτυπώνει κείμενο στην οθόνη</button>
+  </div>
+  <div class="feedback" id="fb-7"></div>
+</div>
+
+<hr class="section-divider"/>
+
+<div class="section-badge html">🌐 HTML</div>
+
+<!-- Q8 -->
+<div class="q-card" id="qcard-8">
+  <div class="q-num">ΕΡΩΤΗΣΗ 08 — Πολλαπλής Επιλογής</div>
+  <div class="q-text">Ποιο tag δημιουργεί τον <strong>μεγαλύτερο</strong> τίτλο σε μια HTML σελίδα;</div>
+  <div class="options" id="opts-8">
+    <button class="opt-btn" onclick="answer(8,'A',false)"><span class="opt-letter">A</span> <code>&lt;h6&gt;</code></button>
+    <button class="opt-btn" onclick="answer(8,'B',false)"><span class="opt-letter">B</span> <code>&lt;title&gt;</code></button>
+    <button class="opt-btn" onclick="answer(8,'C',false)"><span class="opt-letter">C</span> <code>&lt;header&gt;</code></button>
+    <button class="opt-btn" onclick="answer(8,'D',true)"><span class="opt-letter">D</span> <code>&lt;h1&gt;</code></button>
+  </div>
+  <div class="feedback" id="fb-8"></div>
+</div>
+
+<!-- Q9 -->
+<div class="q-card" id="qcard-9">
+  <div class="q-num">ΕΡΩΤΗΣΗ 09 — Εύρεση Λάθους</div>
+  <div class="q-text">Βρες το λάθος στον παρακάτω HTML κώδικα:</div>
+  <div class="code-block">&lt;<span class="kw">h1</span>&gt;New York&lt;/<span class="kw">h1</span>&gt;
+&lt;<span class="kw">p</span>&gt;The Big Apple&lt;/<span class="kw">p</span>&gt;
+&lt;<span class="kw">a</span> <span class="fn">href</span>=<span class="str">"contact.html"</span>&gt;Contact Us
+&lt;<span class="kw">img</span> <span class="fn">src</span>=<span class="str">"ny.jpg"</span> <span class="fn">width</span>=<span class="str">"400"</span>&gt;</div>
+  <div class="options" id="opts-9">
+    <button class="opt-btn" onclick="answer(9,'A',false)"><span class="opt-letter">A</span> Το <code>&lt;h1&gt;</code> δεν κλείνει σωστά</button>
+    <button class="opt-btn" onclick="answer(9,'B',false)"><span class="opt-letter">B</span> Το <code>&lt;img&gt;</code> χρειάζεται closing tag <code>&lt;/img&gt;</code></button>
+    <button class="opt-btn" onclick="answer(9,'C',true)"><span class="opt-letter">C</span> Ο σύνδεσμος <code>&lt;a&gt;</code> δεν κλείνει — λείπει το <code>&lt;/a&gt;</code></button>
+    <button class="opt-btn" onclick="answer(9,'D',false)"><span class="opt-letter">D</span> Δεν υπάρχει λάθος</button>
+  </div>
+  <div class="feedback" id="fb-9"></div>
+</div>
+
+<!-- Q10 -->
+<div class="q-card" id="qcard-10">
+  <div class="q-num">ΕΡΩΤΗΣΗ 10 — Πολλαπλής Επιλογής</div>
+  <div class="q-text">Ποιο tag χρησιμοποιείται για κάθε στοιχείο μέσα σε μια λίστα (<code>&lt;ul&gt;</code> ή <code>&lt;ol&gt;</code>);</div>
+  <div class="options" id="opts-10">
+    <button class="opt-btn" onclick="answer(10,'A',false)"><span class="opt-letter">A</span> <code>&lt;list&gt;</code></button>
+    <button class="opt-btn" onclick="answer(10,'B',false)"><span class="opt-letter">B</span> <code>&lt;item&gt;</code></button>
+    <button class="opt-btn" onclick="answer(10,'C',true)"><span class="opt-letter">C</span> <code>&lt;li&gt;</code></button>
+    <button class="opt-btn" onclick="answer(10,'D',false)"><span class="opt-letter">D</span> <code>&lt;bullet&gt;</code></button>
+  </div>
+  <div class="feedback" id="fb-10"></div>
+</div>
+
+<!-- Q11 -->
+<div class="q-card" id="qcard-11">
+  <div class="q-num">ΕΡΩΤΗΣΗ 11 — Συμπλήρωση Κενού</div>
+  <div class="q-text">Συμπλήρωσε το attribute που καθορίζει τη διεύθυνση ενός συνδέσμου:</div>
+  <div class="code-block">&lt;<span class="kw">a</span> ______=<span class="str">"https://www.nyc.gov"</span>&gt;NYC Official Site&lt;/<span class="kw">a</span>&gt;</div>
+  <div class="fill-wrap">
+    <input class="fill-input" id="fill-11" placeholder="γράψε εδώ..." autocomplete="off" spellcheck="false"/>
+    <button class="check-btn" onclick="checkFill(11,'href')">Έλεγχος</button>
+  </div>
+  <div class="feedback" id="fb-11"></div>
+</div>
+
+<!-- Q12 -->
+<div class="q-card" id="qcard-12">
+  <div class="q-num">ΕΡΩΤΗΣΗ 12 — Συμπλήρωση Κενού</div>
+  <div class="q-text">Συμπλήρωσε το closing tag που λείπει:</div>
+  <div class="code-block">&lt;<span class="kw">h1</span>&gt;New York: The City That Never Sleeps&lt;______&gt;</div>
+  <div class="fill-wrap">
+    <input class="fill-input" id="fill-12" placeholder="γράψε εδώ..." autocomplete="off" spellcheck="false"/>
+    <button class="check-btn" onclick="checkFill(12,'/h1')">Έλεγχος</button>
+  </div>
+  <div class="feedback" id="fb-12"></div>
+</div>
+
+<!-- Q13 -->
+<div class="q-card" id="qcard-13">
+  <div class="q-num">ΕΡΩΤΗΣΗ 13 — Τι Εμφανίζεται;</div>
+  <div class="q-text">Τι εμφανίζει ο παρακάτω κώδικας στον browser;</div>
+  <div class="code-block">&lt;<span class="kw">ol</span>&gt;
+  &lt;<span class="kw">li</span>&gt;Αθήνα&lt;/<span class="kw">li</span>&gt;
+  &lt;<span class="kw">li</span>&gt;Θεσσαλονίκη&lt;/<span class="kw">li</span>&gt;
+  &lt;<span class="kw">li</span>&gt;Πάτρα&lt;/<span class="kw">li</span>&gt;
+&lt;/<span class="kw">ol</span>&gt;</div>
+  <div class="options" id="opts-13">
+    <button class="opt-btn" onclick="answer(13,'A',false)"><span class="opt-letter">A</span> Λίστα με bullets (•)</button>
+    <button class="opt-btn" onclick="answer(13,'B',true)"><span class="opt-letter">B</span> Αριθμημένη λίστα: 1. Αθήνα 2. Θεσσαλονίκη 3. Πάτρα</button>
+    <button class="opt-btn" onclick="answer(13,'C',false)"><span class="opt-letter">C</span> Τα τρία ονόματα σε μια γραμμή</button>
+    <button class="opt-btn" onclick="answer(13,'D',false)"><span class="opt-letter">D</span> Τίποτα — λάθος κώδικας</button>
+  </div>
+  <div class="feedback" id="fb-13"></div>
+</div>
+
+<!-- Q14 -->
+<div class="q-card" id="qcard-14">
+  <div class="q-num">ΕΡΩΤΗΣΗ 14 — Πολλαπλής Επιλογής</div>
+  <div class="q-text">Πού γράφεται ο τίτλος που εμφανίζεται στην <strong>καρτέλα του browser</strong>;</div>
+  <div class="options" id="opts-14">
+    <button class="opt-btn" onclick="answer(14,'A',false)"><span class="opt-letter">A</span> <code>&lt;body&gt;&lt;h1&gt;Τίτλος&lt;/h1&gt;&lt;/body&gt;</code></button>
+    <button class="opt-btn" onclick="answer(14,'B',true)"><span class="opt-letter">B</span> <code>&lt;head&gt;&lt;title&gt;Τίτλος&lt;/title&gt;&lt;/head&gt;</code></button>
+    <button class="opt-btn" onclick="answer(14,'C',false)"><span class="opt-letter">C</span> <code>&lt;header&gt;Τίτλος&lt;/header&gt;</code></button>
+    <button class="opt-btn" onclick="answer(14,'D',false)"><span class="opt-letter">D</span> <code>&lt;meta name="title"&gt;</code></button>
+  </div>
+  <div class="feedback" id="fb-14"></div>
+</div>
+
+<!-- Q15 -->
+<div class="q-card" id="qcard-15">
+  <div class="q-num">ΕΡΩΤΗΣΗ 15 — Πολλαπλής Επιλογής</div>
+  <div class="q-text">Ποιο από τα παρακάτω δημιουργεί ένα πεδίο εισαγωγής κειμένου σε φόρμα HTML;</div>
+  <div class="options" id="opts-15">
+    <button class="opt-btn" onclick="answer(15,'A',true)"><span class="opt-letter">A</span> <code>&lt;input type="text" placeholder="Όνομα..."&gt;</code></button>
+    <button class="opt-btn" onclick="answer(15,'B',false)"><span class="opt-letter">B</span> <code>&lt;textfield&gt;Όνομα&lt;/textfield&gt;</code></button>
+    <button class="opt-btn" onclick="answer(15,'C',false)"><span class="opt-letter">C</span> <code>&lt;form type="text"&gt;</code></button>
+    <button class="opt-btn" onclick="answer(15,'D',false)"><span class="opt-letter">D</span> <code>&lt;label type="input"&gt;</code></button>
+  </div>
+  <div class="feedback" id="fb-15"></div>
+</div>
+
+<div class="submit-wrap">
+  <button class="submit-btn" onclick="showScore()">📊 Δες το Αποτέλεσμά σου</button>
+</div>
+
+<div id="score-panel">
+  <h2>Αποτέλεσμα Τεστ</h2>
+  <div class="score-big" id="score-num">—</div>
+  <div class="score-sub" id="score-sub">— / 15 σωστές απαντήσεις</div>
+  <div class="grade-badge" id="grade-badge">—</div>
+  <br/>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:4px;">
+    <button class="restart-btn" onclick="restart()">🔄 Νέα Προσπάθεια</button>
+    <button class="restart-btn" style="border-color:var(--accent2);color:var(--accent2);" onclick="printResult()">🖨️ Εκτύπωση Αποτελέσματος</button>
+  </div>
+</div>
+
+<!-- PRINT AREA -->
+<div id="print-area"></div>
+
+</main>
+
+<script>
+const TOTAL = 15;
+let answered = {};
+let score = 0;
+
+const feedbacks = {
+  1: { correct: "✓ Σωστό! Η print() εκτυπώνει στην οθόνη.", wrong: "✗ Λάθος. Στην Python χρησιμοποιούμε: print('κείμενο')" },
+  2: { correct: "✓ Σωστό! float() μετατρέπει σε δεκαδικό αριθμό.", wrong: "✗ Λάθος. float() επιστρέφει αριθμό κινητής υποδιαστολής." },
+  3: { correct: "✓ Σωστό! 17 >= 15 αλλά 17 < 18, οπότε εκτελείται το δεύτερο elif.", wrong: "✗ Λάθος. grade=17: δεν είναι >=18, αλλά είναι >=15 → 'Καλά.'"},
+  4: { correct: "✓ Σωστό! >= και <= περιλαμβάνουν τα άκρα 0 και 100.", wrong: "✗ Λάθος. Για συμπερίληψη των άκρων χρειάζεται: x >= 0 and x <= 100" },
+  5: { correct: "✓ Σωστό! float() για δεκαδικό αποτέλεσμα της πράξης.", wrong: "✗ Λάθος. Χρησιμοποιείται float() γιατί το αποτέλεσμα είναι δεκαδικός." },
+  6: { correct: "✓ Σωστό! input() επιστρέφει string — πρέπει: int(input('Ηλικία:')).", wrong: "✗ Λάθος. Το πρόβλημα: input() δίνει string, δεν μπορεί να συγκριθεί με 18." },
+  7: { correct: "✓ Σωστό! str() μετατρέπει οτιδήποτε σε string.", wrong: "✗ Λάθος. str() = μετατροπή σε συμβολοσειρά. π.χ. str(42) → '42'" },
+  8: { correct: "✓ Σωστό! h1 = μεγαλύτερος τίτλος, h6 = μικρότερος.", wrong: "✗ Λάθος. Οι τίτλοι πάνε h1 (μεγαλύτερος) έως h6 (μικρότερος)." },
+  9: { correct: "✓ Σωστό! Το &lt;a&gt; είναι tag που ανοίγει και κλείνει — λείπει το &lt;/a&gt;. Το &lt;img&gt; δεν θέλει closing tag.", wrong: "✗ Λάθος. Κοίτα τον σύνδεσμο &lt;a href='...'&gt; — δεν έχει &lt;/a&gt; για να κλείσει." },
+  10: { correct: "✓ Σωστό! &lt;li&gt; = list item, μπαίνει μέσα σε &lt;ul&gt; ή &lt;ol&gt;.", wrong: "✗ Λάθος. Κάθε στοιχείο λίστας γράφεται με &lt;li&gt;...&lt;/li&gt;" },
+  11: { correct: "✓ Σωστό! href = hypertext reference — η διεύθυνση του συνδέσμου.", wrong: "✗ Λάθος. Το attribute που δηλώνει τη διεύθυνση είναι: href" },
+  12: { correct: "✓ Σωστό! Κάθε tag που ανοίγει πρέπει να κλείνει: &lt;h1&gt;...&lt;/h1&gt;", wrong: "✗ Λάθος. Το closing tag του &lt;h1&gt; είναι: /h1  →  &lt;/h1&gt;" },
+  13: { correct: "✓ Σωστό! &lt;ol&gt; = ordered list → αριθμημένη λίστα.", wrong: "✗ Λάθος. &lt;ol&gt; δημιουργεί αριθμημένη λίστα (1, 2, 3...)." },
+  14: { correct: "✓ Σωστό! &lt;title&gt; μέσα στο &lt;head&gt; εμφανίζεται στην καρτέλα.", wrong: "✗ Λάθος. Ο τίτλος καρτέλας: &lt;head&gt;&lt;title&gt;Τίτλος&lt;/title&gt;&lt;/head&gt;" },
+  15: { correct: "✓ Σωστό! &lt;input type='text'&gt; δημιουργεί πεδίο εισαγωγής.", wrong: "✗ Λάθος. Σωστό: &lt;input type='text' placeholder='...'&gt;" },
+};
+
+function updateProgress() {
+  const n = Object.keys(answered).length;
+  document.getElementById('prog-text').textContent = n + ' / ' + TOTAL;
+  document.getElementById('prog-fill').style.width = (n / TOTAL * 100) + '%';
+}
+
+function answer(qnum, choice, isCorrect) {
+  if (answered[qnum]) return;
+  answered[qnum] = isCorrect;
+  if (isCorrect) score++;
+
+  const btns = document.querySelectorAll(`#opts-${qnum} .opt-btn`);
+  const correctMap = {1:'C',2:'B',3:'B',4:'C',6:'A',7:'C',8:'D',9:'C',10:'C',12:'B',13:'B',14:'B',15:'A'};
+
+  btns.forEach(btn => {
+    btn.disabled = true;
+    const letter = btn.querySelector('.opt-letter').textContent;
+    if (letter === choice) btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    if (!isCorrect && letter === correctMap[qnum]) btn.classList.add('correct');
+  });
+
+  document.getElementById(`qcard-${qnum}`).classList.add(isCorrect ? 'answered-correct' : 'answered-wrong');
+  const fb = document.getElementById(`fb-${qnum}`);
+  fb.textContent = feedbacks[qnum][isCorrect ? 'correct' : 'wrong'];
+  fb.className = 'feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  updateProgress();
+}
+
+function checkFill(qnum, correctAnswer) {
+  if (answered[qnum]) return;
+  const inp = document.getElementById(`fill-${qnum}`);
+  const btn = inp.nextElementSibling;
+  const val = inp.value.trim().toLowerCase();
+  const isCorrect = val === correctAnswer.toLowerCase();
+
+  answered[qnum] = isCorrect;
+  if (isCorrect) score++;
+  inp.disabled = true; btn.disabled = true;
+  inp.classList.add(isCorrect ? 'correct' : 'wrong');
+  document.getElementById(`qcard-${qnum}`).classList.add(isCorrect ? 'answered-correct' : 'answered-wrong');
+  const fb = document.getElementById(`fb-${qnum}`);
+  fb.textContent = feedbacks[qnum][isCorrect ? 'correct' : 'wrong'];
+  fb.className = 'feedback show ' + (isCorrect ? 'correct' : 'wrong');
+  updateProgress();
+}
+
+function showScore() {
+  const panel = document.getElementById('score-panel');
+  panel.style.display = 'block';
+  document.getElementById('score-num').textContent = score + '/15';
+  document.getElementById('score-sub').textContent = score + ' σωστές από 15 ερωτήσεις';
+  const pct = score / 15 * 100;
+  const badge = document.getElementById('grade-badge');
+  if (pct >= 87) { badge.textContent = '🏆 Άριστα!'; badge.className = 'grade-badge grade-A'; }
+  else if (pct >= 67) { badge.textContent = '👍 Πολύ Καλά'; badge.className = 'grade-badge grade-B'; }
+  else if (pct >= 50) { badge.textContent = '✔ Καλά — Συνέχισε!'; badge.className = 'grade-badge grade-C'; }
+  else { badge.textContent = '📚 Χρειάζεται Επανάληψη'; badge.className = 'grade-badge grade-D'; }
+  panel.scrollIntoView({ behavior: 'smooth' });
+}
+
+function printResult() {
+  const qTexts = {
+    1:"Εντολή εκτύπωσης Python", 2:"Τύπος float(input())", 3:"Τι εκτυπώνεται (grade=17)",
+    4:"Συνθήκη μεταξύ 0 και 100", 5:"Συμπλήρωση: float", 6:"Εύρεση λάθους input()",
+    7:"Τι κάνει η str()", 8:"Μεγαλύτερος τίτλος HTML", 9:"Εύρεση λάθους - λείπει /a",
+    10:"Tag στοιχείου λίστας", 11:"Συμπλήρωση: href", 12:"Συμπλήρωση: meta charset",
+    13:"Τι εμφανίζει ol", 14:"Τίτλος καρτέλας browser", 15:"Πεδίο εισαγωγής φόρμας"
+  };
+  const pct = score / 15 * 100;
+  let grade = pct >= 87 ? 'Άριστα' : pct >= 67 ? 'Πολύ Καλά' : pct >= 50 ? 'Καλά' : 'Χρειάζεται Επανάληψη';
+  const studentName = document.getElementById('student-name').value.trim() || '—';
+  const now = new Date().toLocaleString('el-GR');
+  let rows = '';
+  for (let i = 1; i <= 15; i++) {
+    const res = answered[i] === undefined ? '—' : (answered[i] ? '✓' : '✗');
+    const cls = answered[i] === undefined ? '' : (answered[i] ? 'ok' : 'err');
+    rows += `<tr><td>${i}</td><td>${qTexts[i]}</td><td class="${cls}">${res}</td></tr>`;
+  }
+  document.getElementById('print-area').innerHTML = `
+    <h1>Επαναληπτικό Τεστ Β — Α΄ Λυκείου Πληροφορική</h1>
+    <div class="pr-meta">
+      <strong>Μαθητής/τρια:</strong> ${studentName}<br>
+      <strong>Εκτυπώθηκε:</strong> ${now}
+    </div>
+    <div class="pr-score">
+      <div class="pr-big">${score} / 15</div>
+      <div class="pr-grade">${grade}</div>
+    </div>
+    <table>
+      <thead><tr><th>#</th><th>Ερώτηση</th><th>Αποτέλεσμα</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="pr-footer">Α΄ Λυκείου — Python &amp; HTML // Επαναληπτικό Τεστ Β</div>
+  `;
+  window.print();
+}
+
+function restart() { score=0; answered={}; location.reload(); }
+</script>
+</body>
+</html>
