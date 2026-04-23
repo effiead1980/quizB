@@ -130,34 +130,68 @@
   .name-card input:focus { border-color: var(--accent); }
   .name-card input::placeholder { color: var(--muted); font-weight: 400; }
 
-  /* PRINT */
+  /* PRINT AREA — hidden by default; shown as a standalone result page on screen,
+     and reused as the printed document via @media print */
   #print-area { display: none; }
+  #print-area.visible {
+    display: block;
+    max-width: 780px;
+    margin: 40px auto;
+    padding: 0 20px;
+  }
+  #print-area .pr-sheet {
+    background: #fff;
+    color: #111;
+    border-radius: 12px;
+    padding: 36px 40px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+    font-family: Arial, sans-serif;
+  }
+  #print-area h1 { font-size: 1.4rem; margin-bottom: 8px; color: #111; }
+  #print-area .pr-meta { font-size: 0.9rem; color: #333; margin-bottom: 20px; line-height: 1.8; }
+  #print-area .pr-meta strong { color: #000; }
+  #print-area .pr-score { border: 2px solid #111; border-radius: 8px; padding: 14px 22px; display: inline-block; margin-bottom: 22px; text-align: center; }
+  #print-area .pr-big { font-size: 2.4rem; font-weight: 700; }
+  #print-area .pr-grade { font-size: 1.05rem; font-weight: 700; margin-top: 4px; }
+  #print-area table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  #print-area th { background: #111; color: #fff; padding: 8px 12px; text-align: left; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #print-area td { padding: 7px 12px; border-bottom: 1px solid #eee; }
+  #print-area td:last-child { text-align: center; font-weight: 700; font-size: 1.1rem; }
+  #print-area .ok { color: #1a8a4a; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #print-area .err { color: #cc3333; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #print-area .pr-footer { margin-top: 24px; font-size: 0.75rem; color: #999; border-top: 1px solid #ddd; padding-top: 10px; }
+
+  /* Action buttons on the on-screen result page (hidden when actually printing) */
+  .result-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .result-actions button {
+    background: transparent;
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    color: var(--accent);
+    font-family: var(--sans);
+    font-size: 0.95rem;
+    font-weight: 700;
+    padding: 12px 28px;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: background 0.15s, color 0.15s;
+  }
+  .result-actions button:hover { background: var(--accent); color: #000; }
+  .result-actions button.secondary { border-color: var(--accent2); color: var(--accent2); }
+  .result-actions button.secondary:hover { background: var(--accent2); color: #fff; }
+
+  /* When actually printing: show only the sheet, strip the dark chrome */
   @media print {
-    body * { visibility: hidden; }
-    #print-area, #print-area * { visibility: visible; }
-    #print-area {
-      display: block !important;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%;
-      padding: 32px;
-      font-family: Arial, sans-serif;
-      color: #111;
-      background: #fff;
-    }
-    #print-area h1 { font-size: 1.4rem; margin-bottom: 4px; }
-    #print-area .pr-meta { font-size: 0.85rem; color: #333; margin-bottom: 20px; line-height: 1.8; }
-    #print-area .pr-meta strong { color: #000; }
-    #print-area .pr-score { border: 2px solid #111; border-radius: 8px; padding: 14px 22px; display: inline-block; margin-bottom: 24px; text-align: center; }
-    #print-area .pr-big { font-size: 2.4rem; font-weight: 700; }
-    #print-area .pr-grade { font-size: 1.1rem; font-weight: 700; margin-top: 4px; }
-    #print-area table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-    #print-area th { background: #111; color: #fff; padding: 8px 12px; text-align:left; }
-    #print-area td { padding: 7px 12px; border-bottom: 1px solid #ddd; }
-    #print-area td:last-child { text-align: center; font-weight: 700; font-size: 1.1rem; }
-    #print-area .ok { color: #1a8a4a; }
-    #print-area .err { color: #cc3333; }
-    #print-area .pr-footer { margin-top: 28px; font-size: 0.75rem; color: #999; border-top: 1px solid #ddd; padding-top: 12px; }
+    body { background: #fff; padding: 0; }
+    header, main, .result-actions { display: none !important; }
+    #print-area.visible { margin: 0; padding: 0; max-width: 100%; }
+    #print-area .pr-sheet { box-shadow: none; border-radius: 0; padding: 20px; }
   }
 
   @media (max-width: 600px) {
@@ -424,10 +458,10 @@
   </div>
 </div>
 
+</main>
+
 <!-- PRINT AREA -->
 <div id="print-area"></div>
-
-</main>
 
 <script>
 const TOTAL = 15;
@@ -512,6 +546,12 @@ function showScore() {
   panel.scrollIntoView({ behavior: 'smooth' });
 }
 
+function sanitize(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
 function printResult() {
   const qTexts = {
     1:"Εντολή εκτύπωσης Python", 2:"Τύπος float(input())", 3:"Τι εκτυπώνεται (grade=17)",
@@ -522,7 +562,8 @@ function printResult() {
   };
   const pct = score / 15 * 100;
   let grade = pct >= 87 ? 'Άριστα' : pct >= 67 ? 'Πολύ Καλά' : pct >= 50 ? 'Καλά' : 'Χρειάζεται Επανάληψη';
-  const studentName = document.getElementById('student-name').value.trim() || '—';
+  const rawName = document.getElementById('student-name').value.trim() || '—';
+  const studentName = sanitize(rawName);
   const now = new Date().toLocaleString('el-GR');
   let rows = '';
   for (let i = 1; i <= 15; i++) {
@@ -531,22 +572,42 @@ function printResult() {
     rows += `<tr><td>${i}</td><td>${qTexts[i]}</td><td class="${cls}">${res}</td></tr>`;
   }
   document.getElementById('print-area').innerHTML = `
-    <h1>Επαναληπτικό Τεστ Β — Α΄ Λυκείου Πληροφορική</h1>
-    <div class="pr-meta">
-      <strong>Μαθητής/τρια:</strong> ${studentName}<br>
-      <strong>Εκτυπώθηκε:</strong> ${now}
+    <div class="pr-sheet">
+      <h1>Επαναληπτικό Τεστ Β — Α΄ Λυκείου Πληροφορική</h1>
+      <div class="pr-meta">
+        <strong>Μαθητής/τρια:</strong> ${studentName}<br>
+        <strong>Ημερομηνία:</strong> ${now}
+      </div>
+      <div class="pr-score">
+        <div class="pr-big">${score} / 15</div>
+        <div class="pr-grade">${grade}</div>
+      </div>
+      <table>
+        <thead><tr><th>#</th><th>Ερώτηση</th><th>Αποτέλεσμα</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="pr-footer">Α΄ Λυκείου — Python &amp; HTML // Επαναληπτικό Τεστ Β</div>
     </div>
-    <div class="pr-score">
-      <div class="pr-big">${score} / 15</div>
-      <div class="pr-grade">${grade}</div>
+    <div class="result-actions">
+      <button onclick="window.print()">🖨️ Εκτύπωση</button>
+      <button class="secondary" onclick="closeResultPage()">⬅ Επιστροφή στο Τεστ</button>
     </div>
-    <table>
-      <thead><tr><th>#</th><th>Ερώτηση</th><th>Αποτέλεσμα</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-    <div class="pr-footer">Α΄ Λυκείου — Python &amp; HTML // Επαναληπτικό Τεστ Β</div>
   `;
-  window.print();
+
+  // Show the result page, hide the quiz
+  document.querySelector('header').style.display = 'none';
+  document.querySelector('main').style.display = 'none';
+  document.getElementById('print-area').classList.add('visible');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function closeResultPage() {
+  document.querySelector('header').style.display = '';
+  document.querySelector('main').style.display = '';
+  const printArea = document.getElementById('print-area');
+  printArea.classList.remove('visible');
+  printArea.innerHTML = '';
+  document.getElementById('score-panel').scrollIntoView({ behavior: 'smooth' });
 }
 
 function restart() { score=0; answered={}; location.reload(); }
